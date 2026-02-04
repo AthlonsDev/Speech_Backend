@@ -67,7 +67,8 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         print("Converting to doc...")
         file_doc = file.filename.replace(".wav", ".docx").replace(".mp3", ".docx").replace(".m4a", ".docx")
         doc = convert_to_doc(result, file_doc, model_type)
-        print(f"Doc file: {doc}")
+
+        os.remove(file_path)  # Clean up uploaded audio file
 
         return result
     

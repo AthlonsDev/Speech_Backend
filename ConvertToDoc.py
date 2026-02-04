@@ -22,12 +22,13 @@ def convert_to_doc(text, output_filename, type):
     doc.add_paragraph(text) #First paragraph of the document
     doc.add_heading('Summary', level=1) #Summary heading
     doc.add_paragraph(doc_assistant(text)) #Summary paragraph
-    doc.save(output_filename)
+    save_path = "c:\\Users\\asanna\\OneDrive - University of East London\\DESKTOP\\GenDoc"
+    doc.save(save_path + "\\" + output_filename)
 
     return output_filename
 
 text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
-output_filename = "Transcription.docx"
+output_filename = f"Transcription - {get_date()}.docx"
 def doc_assistant(text):
     prompt = f"Summarize the following text in concise paragraph:\n\n{text}"
     response = client.models.generate_content(
