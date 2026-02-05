@@ -36,8 +36,25 @@ class SearchInputData(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"message": "API is running"}
+    path = 'C:\\Users\\athlo\\Desktop\\Speech_Backend\\docs'
+    if os.path.exists(path):
+        # list all files in the docs directory
+        files = os.listdir(path)
+        # return {"files": files}
+        return JSONResponse(content={"files": files})
+    else:
+        raise HTTPException(status_code=404, detail="Docs directory not found")
 
+@app.get("/docxs")
+def get_docs():
+    path = 'C:\\Users\\athlo\\Desktop\\Speech_Backend\\docs'
+    if os.path.exists(path):
+        # list all files in the docs directory
+        files = os.listdir(path)
+        # return {"files": files}
+        return JSONResponse(content={"files": files})
+    else:
+        raise HTTPException(status_code=404, detail="Docs directory not found")
 
 @app.get("/download/{filename}")
 def download_file(filename: str):
