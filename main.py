@@ -18,7 +18,7 @@ app.add_middleware(
 #       'https://main.d2x1a5nxcjgsfv.amplifyapp.com',
 #       'https://13.40.107.140:8000',
 #       'https://scaling-eureka-7pw5xw7q9qxhrj5j-3000.app.github.dev'],
-    allow_origins='*',
+    allow_origins=['https://fall-unavailable-resistant-moving.trycloudflare.com', '*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,11 +66,11 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         print(f"Transcription result: {result}")
         print("Converting to doc...")
         file_doc = file.filename.replace(".wav", ".docx").replace(".mp3", ".docx").replace(".m4a", ".docx")
-        doc = convert_to_doc(result, file_doc, model_type)
+        convert_to_doc(result, file_doc, model_type)
 
         os.remove(file_path)  # Clean up uploaded audio file
 
-        return result
+        return file_doc
     
     except Exception as e:
         print(f"Error details: {e}")

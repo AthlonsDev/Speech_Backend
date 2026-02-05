@@ -22,8 +22,12 @@ def convert_to_doc(text, output_filename, type):
     doc.add_paragraph(text) #First paragraph of the document
     doc.add_heading('Summary', level=1) #Summary heading
     doc.add_paragraph(doc_assistant(text)) #Summary paragraph
-    save_path = "c:\\Users\\asanna\\OneDrive - University of East London\\DESKTOP\\GenDoc"
-    doc.save(save_path + "\\" + output_filename)
+    save_path = "c:\\Users\\athlo\\Desktop\\GenDoc"
+    # good to save as a backup. But since the frontend looks for the file in the project dir
+    # It should be saved here as well. Or use a cloud storage solution.
+    # Possibly connect to Onedrive to automatically send it there? Check if needed.
+    # For now save it in the project directory as well.
+    doc.save(output_filename)
 
     return output_filename
 
@@ -44,4 +48,4 @@ def doc_assistant(text):
 
     return summary
 
-convert_to_doc(text, output_filename, type="Notes")
+# convert_to_doc(text, output_filename, type="Notes")
