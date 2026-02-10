@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, PlainTextResponse
 from speech_handler import transcription
 from ConvertToDoc import convert_to_doc
+from aws_client import upload_doc
 import os
 import time
 
@@ -36,25 +37,7 @@ class SearchInputData(BaseModel):
 
 @app.get("/")
 def read_root():
-    path = 'C:\\Users\\athlo\\Desktop\\Speech_Backend\\docs'
-    if os.path.exists(path):
-        # list all files in the docs directory
-        files = os.listdir(path)
-        # return {"files": files}
-        return JSONResponse(content={"files": files})
-    else:
-        raise HTTPException(status_code=404, detail="Docs directory not found")
-
-@app.get("/docxs")
-def get_docs():
-    path = 'C:\\Users\\athlo\\Desktop\\Speech_Backend\\docs'
-    if os.path.exists(path):
-        # list all files in the docs directory
-        files = os.listdir(path)
-        # return {"files": files}
-        return JSONResponse(content={"files": files})
-    else:
-        raise HTTPException(status_code=404, detail="Docs directory not found")
+    return {"message": "Welcome to the Speech Recognition API!"}
 
 @app.get("/download/{filename}")
 def download_file(filename: str):
@@ -83,7 +66,9 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         print(f"Transcription result: {result}")
         print("Converting to doc...")
         file_doc = file.filename.replace(".wav", ".docx").replace(".mp3", ".docx").replace(".m4a", ".docx")
-        convert_to_doc(result, file_doc, model_type)
+        doc = convert_to_doc(result, file_doc, model_type)
+        upload_doc(doc, "username")
+
 
         os.remove(file_path)  # Clean up uploaded audio file
 
