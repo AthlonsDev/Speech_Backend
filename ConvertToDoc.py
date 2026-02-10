@@ -2,6 +2,7 @@ api_key = 'AIzaSyCoOw-xfas4_coDHFbo3nKyPHtSDk7HdGU'
 import time
 from google import genai
 from docx import Document
+import json
 models = [
     "gemini-2.5-flash",
     "gemma-3-27b-it", 
@@ -48,4 +49,92 @@ def doc_assistant(text):
 
     return summary
 
-# convert_to_doc(text, output_filename, type="Notes")
+meeting_struct = {
+    'date': str,
+    'attendees': list[str],
+    'objectives': list[str],
+    'action_items': list[str],
+    'timeline': list[str],
+    'summary': list[str],
+    'conclusion': list[str]
+}
+
+
+def meetings_assistant(user_prompt: str):
+    prompt = f"You are an AI assistant that helps users with creating meetings minutes. Generate a text with information on timing and information based on transcription: \
+    {user_prompt}. follow this structure {meeting_struct}, in objective and timeline try to highlight who said what. Keep the responses brief and to the point. Respond in JSON format only."
+    response = client.models.generate_content(
+        model=models[1],
+        contents=prompt,
+        config={
+            'response_mime_type': 'text/plain',
+        }
+    )
+    print("Assistant Response:", response.candidates[0].content.parts[0].model_dump()['text'])
+    text = response.candidates[0].content.parts[0].model_dump()['text']
+
+    convert_text_to_json(text)
+
+def meeting_doc_assistant(data):
+    doc = Document() #document object
+    doc.add_heading('Transcription', level=0) #Title of the document
+    doc.add_heading('Meeting Info', level=0) #Subtitle of the document
+    table = doc.add_table(rows=3, cols=2)
+    table.style = 'Table Grid' 
+    table.cell(0, 0).text = f"date: {data['date']}"
+    table.cell(0, 1).text = get_date()
+    table.cell(1, 0).text = 'Time'
+    table.cell(1, 1).text = '10:00 AM'
+    table.cell(2, 0).text = 'Attendees'
+    table.cell(2, 1).text = ", ".join(data['attendees'])
+    doc.add_heading('Meeting Objectives', level=0) #Heading for transcribed text
+
+    rows = len(data['objectives'])
+    print(rows)
+    table = doc.add_table(rows=rows, cols=1)
+    table.style = 'Table Grid'
+    for i in range(rows):
+        print(data['objectives'][i])
+        table.cell(i, 0).text = f'{data["objectives"][i]}'
+
+    doc.add_heading('Meeting Timeline', level=0) #Summary heading
+
+    rows = len(data['timeline'])
+    table = doc.add_table(rows=rows, cols=1)
+    table.style = 'Table Grid'
+    for i in range(rows):
+        print(data['timeline'][i])
+        table.cell(i, 0).text = f'{data["timeline"][i]}'
+
+    doc.add_heading('Meeting Summary', level=0) #Summary heading
+    doc.add_paragraph(data['summary'][0]) #Summary paragraph
+
+    output_filename = f"Meeting_Minutes_{get_date()}.docx"
+    doc.save(output_filename)
+
+    return output_filename
+
+
+def convert_text_to_json(text):
+    # convert the text to json format
+    if text.startswith("```json") and text.endswith("```"):
+        json_text = text[7:-3]  # Remove the ```json and ``` tags
+        try:
+            data = json.loads(json_text)
+            data = {k: v for k, v in data.items() if k in meeting_struct}
+            print("Extracted JSON data:", data)
+            meeting_doc_assistant(data)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            return None
+
+
+# meeting_doc_assistant('hello')
+with open('meeting_test.txt', 'r') as f:
+    text = f.read()
+
+
+# meetings_assistant(text)
+
+# meeting_doc_assistant(data)
+meetings_assistant(text)
