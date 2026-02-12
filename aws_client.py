@@ -12,10 +12,11 @@ def connect_to_s3_resource():
     )
     return s3
 
-def upload_doc(filename:str, username:str):
+def upload_doc(filename, name):
     s3 = connect_to_s3_resource()
     try:
-        s3.Bucket('sribucket000').upload_file(filename, f"{filename}_{username}")
-        print(f"File {filename} uploaded to bucket sribucket000 as {filename}_{username}")
+        bucket = 'sribucket000'
+        s3.Bucket('sribucket000').upload_file(f'/tmp/{filename}', bucket, name)
+        print(f"File {filename} uploaded to bucket sribucket000 as {name}")
     except (BotoCoreError, ClientError) as e:
         print(f"Error uploading file: {e}")
