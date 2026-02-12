@@ -23,17 +23,14 @@ def convert_to_doc(text, output_filename, type):
     doc.add_paragraph(text) #First paragraph of the document
     doc.add_heading('Summary', level=1) #Summary heading
     doc.add_paragraph(doc_assistant(text)) #Summary paragraph
-    save_path = "c:\\Users\\athlo\\Desktop\\GenDoc"
-    # good to save as a backup. But since the frontend looks for the file in the project dir
-    # It should be saved here as well. Or use a cloud storage solution.
-    # Possibly connect to Onedrive to automatically send it there? Check if needed.
-    # For now save it in the project directory as well.
-    doc.save(output_filename)
+    # save_path = "c:\\Users\\athlo\\Desktop\\GenDoc"
+    # doc.save(output_filename)
+    # save to s3 (later)
 
     return output_filename
 
-text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
-output_filename = f"Transcription - {get_date()}.docx"
+# text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
+# output_filename = f"Transcription - {get_date()}.docx"
 def doc_assistant(text):
     prompt = f"Summarize the following text in concise paragraph:\n\n{text}"
     response = client.models.generate_content(
@@ -70,12 +67,13 @@ def meetings_assistant(user_prompt: str):
             'response_mime_type': 'text/plain',
         }
     )
-    print("Assistant Response:", response.candidates[0].content.parts[0].model_dump()['text'])
+    # print("Assistant Response:", response.candidates[0].content.parts[0].model_dump()['text'])
     text = response.candidates[0].content.parts[0].model_dump()['text']
 
     convert_text_to_json(text)
 
 def meeting_doc_assistant(data):
+    print("Generating meeting minutes document...")
     doc = Document() #document object
     doc.add_heading('Transcription', level=0) #Title of the document
     doc.add_heading('Meeting Info', level=0) #Subtitle of the document
@@ -112,11 +110,13 @@ def meeting_doc_assistant(data):
     output_filename = f"Meeting_Minutes_{get_date()}.docx"
     doc.save(output_filename)
 
+
     return output_filename
 
 
 def convert_text_to_json(text):
     # convert the text to json format
+    print("Converting text to JSON...")
     if text.startswith("```json") and text.endswith("```"):
         json_text = text[7:-3]  # Remove the ```json and ``` tags
         try:
@@ -127,14 +127,10 @@ def convert_text_to_json(text):
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
             return None
-
-
-# meeting_doc_assistant('hello')
-with open('meeting_test.txt', 'r') as f:
-    text = f.read()
-
+    else: print("Text does not contain valid JSON format.")
+    return None
 
 # meetings_assistant(text)
 
 # meeting_doc_assistant(data)
-meetings_assistant(text)
+# meetings_assistant(text)

@@ -2,10 +2,12 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse, PlainTextResponse
 from speech_handler import transcription
-from ConvertToDoc import convert_to_doc
+from ConvertToDoc import convert_to_doc, get_date, meetings_assistant
 from aws_client import upload_doc
 import os
 import time
+import traceback 
+
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -35,19 +37,36 @@ class SpeechInputData(BaseModel):
 class SearchInputData(BaseModel):
     features: list[str]
 
+class MeetingMinutesInputData(BaseModel):
+    text: str
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Speech Recognition API!"}
 
-@app.get("/download/{filename}")
-def download_file(filename: str):
-    file_path = filename
-    if os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            file_data = f.read()
-        return PlainTextResponse(content=file_data, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
+# @app.get("/download/{filename}")
+# def download_file(filename: str):
+#     file_path = filename
+#     if os.path.exists(file_path):
+#         with open(file_path, "rb") as f:
+#             file_data = f.read()
+#         return PlainTextResponse(content=file_data, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+#     else:
+#         raise HTTPException(status_code=404, detail="File not found")
+    
+@app.post("/meeting-minutes")
+def gen_mm(text: MeetingMinutesInputData):
+    # print("Generating meeting minutes...", text.text)
+    result = meetings_assistant(text.text)
+    try:
+        upload_doc(result, "Meeting_Minutes_1.docx")
+    except Exception as e:
+        print(f"Error details: {e}") 
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"message": f"{text.text}"}
+
+
 
 @app.post("/speech")
 async def speech_recognition(file: UploadFile = File(...), model_type: str = Form(...)):
@@ -67,7 +86,7 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         print("Converting to doc...")
         file_doc = file.filename.replace(".wav", ".docx").replace(".mp3", ".docx").replace(".m4a", ".docx")
         doc = convert_to_doc(result, file_doc, model_type)
-        upload_doc(doc, "username")
+        upload_doc(doc, f"Transcription_{get_date()}.docx")
 
 
         os.remove(file_path)  # Clean up uploaded audio file
