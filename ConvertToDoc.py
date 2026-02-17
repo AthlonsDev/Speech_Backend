@@ -2,7 +2,12 @@ api_key = 'AIzaSyCoOw-xfas4_coDHFbo3nKyPHtSDk7HdGU'
 import time
 from google import genai
 from docx import Document
+from aws_client import upload_doc
 import json
+import os
+import io
+
+
 models = [
     "gemini-2.5-flash",
     "gemma-3-27b-it", 
@@ -22,14 +27,20 @@ def convert_to_doc(text, output_filename, type):
     doc.add_heading('Transcribed Text', level=2) #Heading for transcribed text
     doc.add_paragraph(text) #First paragraph of the document
     doc.add_heading('Summary', level=1) #Summary heading
-    doc.add_paragraph(doc_assistant(text)) #Summary paragraph
-    # save_path = "c:\\Users\\athlo\\Desktop\\GenDoc"
-    # doc.save(output_filename)
-    # save to s3 (later)
+    # doc.add_paragraph(doc_assistant(text)) #Summary paragraph
+    target_stream = io.BytesIO()
+    doc.save(target_stream) #save doc to a stream
+    target_stream.seek(0) #reset stream position to the beginning
+    doc_bytes = target_stream.getvalue() #get the bytes of the document from the stream
+
+    upload_doc(io.BytesIO(doc_bytes), output_filename) #upload doc to s3 using the bytes stream
 
     return output_filename
 
 # text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
+# convert_to_doc(text, "Doc-Test", "transcription")
+
+
 # output_filename = f"Transcription - {get_date()}.docx"
 def doc_assistant(text):
     prompt = f"Summarize the following text in concise paragraph:\n\n{text}"
@@ -58,6 +69,7 @@ meeting_struct = {
 
 
 def meetings_assistant(user_prompt: str):
+    print("Generating meeting minutes...")
     prompt = f"You are an AI assistant that helps users with creating meetings minutes. Generate a text with information on timing and information based on transcription: \
     {user_prompt}. follow this structure {meeting_struct}, in objective and timeline try to highlight who said what. Keep the responses brief and to the point. Respond in JSON format only."
     response = client.models.generate_content(
@@ -108,7 +120,9 @@ def meeting_doc_assistant(data):
     doc.add_paragraph(data['summary'][0]) #Summary paragraph
 
     output_filename = f"Meeting_Minutes_{get_date()}.docx"
-    doc.save(output_filename)
+    doc_path = doc.save(output_filename) #save doc locally and store path in variable
+    upload_doc(doc_path, output_filename) #upload doc to s3
+    os.remove(output_filename) #remove local copy of doc once uploaded to s3
 
 
     return output_filename

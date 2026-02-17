@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse, PlainTextResponse
 from speech_handler import transcription
-from ConvertToDoc import convert_to_doc, get_date, meetings_assistant
+from ConvertToDoc import convert_to_doc, get_date
 from aws_client import upload_doc
 import os
 import time
@@ -57,13 +57,8 @@ def read_root():
 @app.post("/meeting-minutes")
 def gen_mm(text: MeetingMinutesInputData):
     # print("Generating meeting minutes...", text.text)
-    result = meetings_assistant(text.text)
-    try:
-        upload_doc(result, "Meeting_Minutes_1.docx")
-    except Exception as e:
-        print(f"Error details: {e}") 
-        traceback.print_exc()
-        raise HTTPException(status_code=400, detail=str(e))
+    # result = meetings_assistant(text.text)
+    result = convert_to_doc(text.text, "Meeting_Minutes.docx", 'Notes')
     return {"message": f"{text.text}"}
 
 
