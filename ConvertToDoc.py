@@ -15,6 +15,7 @@ models = [
     "gemini-3-flash-preview"
 ]
 client = genai.Client(api_key=api_key)
+client.models.list()
 
 def get_date():
     return time.strftime("%d-%m-%Y")
@@ -37,7 +38,7 @@ def convert_to_doc(text, output_filename, type):
 
     return output_filename
 
-# text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
+text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
 # convert_to_doc(text, "Doc-Test", "transcription")
 
 
@@ -137,14 +138,16 @@ def convert_text_to_json(text):
             data = json.loads(json_text)
             data = {k: v for k, v in data.items() if k in meeting_struct}
             print("Extracted JSON data:", data)
-            meeting_doc_assistant(data)
+            print(type(data))
+            # meeting_doc_assistant(data)
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
             return None
     else: print("Text does not contain valid JSON format.")
     return None
 
-# meetings_assistant(text)
+meetings_assistant(text)
+
 
 # meeting_doc_assistant(data)
 # meetings_assistant(text)
