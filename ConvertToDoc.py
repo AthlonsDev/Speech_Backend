@@ -69,7 +69,7 @@ meeting_struct = {
 }
 
 
-def meetings_assistant(user_prompt: str):
+def meetings_assistant(user_prompt: str , title):
     print("Generating meeting minutes...")
     prompt = f"You are an AI assistant that helps users with creating meetings minutes. Generate a text with information on timing and information based on transcription: \
     {user_prompt}. follow this structure {meeting_struct}, in objective and timeline try to highlight who said what. Keep the responses brief and to the point. Respond in JSON format only."
@@ -83,9 +83,9 @@ def meetings_assistant(user_prompt: str):
     # print("Assistant Response:", response.candidates[0].content.parts[0].model_dump()['text'])
     text = response.candidates[0].content.parts[0].model_dump()['text']
 
-    convert_text_to_json(text)
+    convert_text_to_json(text, title)
 
-def meeting_doc_assistant(data):
+def meeting_doc_assistant(data, title):
     print("Generating meeting minutes document...")
     doc = Document() #document object
     doc.add_heading('Transcription', level=0) #Title of the document
@@ -120,7 +120,7 @@ def meeting_doc_assistant(data):
     doc.add_heading('Meeting Summary', level=0) #Summary heading
     doc.add_paragraph(data['summary'][0]) #Summary paragraph
 
-    output_filename = f"Meeting_Minutes_{get_date()}.docx"
+    output_filename = f"Meeting_{title}.docx"
     doc_path = doc.save(output_filename) #save doc locally and store path in variable
     upload_doc(doc_path, output_filename) #upload doc to s3
     os.remove(output_filename) #remove local copy of doc once uploaded to s3
@@ -129,7 +129,7 @@ def meeting_doc_assistant(data):
     return output_filename
 
 
-def convert_text_to_json(text):
+def convert_text_to_json(text, title):
     # convert the text to json format
     print("Converting text to JSON...")
     if text.startswith("```json") and text.endswith("```"):
@@ -139,14 +139,14 @@ def convert_text_to_json(text):
             data = {k: v for k, v in data.items() if k in meeting_struct}
             print("Extracted JSON data:", data)
             print(type(data))
-            # meeting_doc_assistant(data)
+            meeting_doc_assistant(data, title)
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")
             return None
     else: print("Text does not contain valid JSON format.")
     return None
 
-meetings_assistant(text)
+# meetings_assistant(text, "Meeting_1")
 
 
 # meeting_doc_assistant(data)
