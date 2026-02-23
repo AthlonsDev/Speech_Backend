@@ -1,18 +1,16 @@
 import torch
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-import joblib
-
 
 
 def load_model():
     if torch.cuda.is_available():
-        torch_dtype = torch.float16
+        torch_dtype = torch.float16 # float16 if cuda is available
     else:
-        torch_dtype = torch.float32 #float 16 for cuda but not available
+        torch_dtype = torch.float32 #float32 if only CPU is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
         # model_id = "openai/whisper-large-v3"
 
-    model_id = "openai/whisper-tiny"
+    model_id = "openai/whisper-tiny" # tiny or small models are much faster and still pretty accurate
 
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         model_id)

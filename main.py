@@ -7,11 +7,9 @@ from speech_handler import transcription
 from ConvertToDoc import convert_to_doc, get_date, meetings_assistant
 from aws_client import upload_doc
 import requests
-
-
-
 from fastapi.middleware.cors import CORSMiddleware
 
+n_jobs = 0
 app = FastAPI()
 
 app.add_middleware(
@@ -52,6 +50,7 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         f.write(await file.read())
 
     try:
+        n_jobs += 1
         print("Starting transcription...")
         print(model_type)
         # call model based on audio type, simple notes model or more complex meeting minutes model
@@ -70,8 +69,10 @@ async def speech_recognition(file: UploadFile = File(...), model_type: str = For
         # AI process is complete, upload doc to s3
         upload_doc(doc, f"Transcription_{get_date()}.docx")
         # Model has done processing, the doc has been generated and uploaded - kill instance
-        if stopEC2Instance():
-            return file_doc
+        n_jobs -= 1
+        if n_jobs == 0: # Only stop the instance if there are no more jobs being processed, otherwise we might stop the instance while it's still processing other requests, which would lead to errors and a bad user experience. This way we can ensure that the instance is only stopped when it's truly idle and not processing any requests.
+            if stopEC2Instance():
+                return file_doc
     
     except Exception as e:
         print(f"Error details: {e}")
