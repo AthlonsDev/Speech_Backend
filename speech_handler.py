@@ -7,8 +7,6 @@ import torch
 import torchaudio
 from whisper import load_model
 from diarization import init_diarization
-# from diarization_end import diarize
-import json
 
 
 def _load_audio_input(
@@ -85,7 +83,6 @@ def _load_audio_input(
 def combine(input_source: Any):
     segments = []
     d = init_diarization(input_source) #local/EC2 inference
-    # d = diarize({"audio": input_source}) #sagemaker inference
     if d is None:
         print("Diarization failed")
         return
@@ -105,7 +102,6 @@ def combine(input_source: Any):
 
         print('start transcription...')
         w_pipe = load_model() # Local/EC2 Inference
-        # w_pipe = read_audio_file({"audio": "temp_seg.wav"})  #sagemaker inference
         output = w_pipe("temp_seg.wav")
         t = output["text"]
         segments.append(f"{speaker}: {t}")

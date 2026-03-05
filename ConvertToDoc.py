@@ -1,4 +1,3 @@
-api_key = 'AIzaSyCoOw-xfas4_coDHFbo3nKyPHtSDk7HdGU'
 import time
 from google import genai
 from docx import Document
@@ -7,6 +6,13 @@ import json
 import os
 import io
 
+from dotenv import load_dotenv
+load_dotenv()
+
+api_key = os.getenv("Google_API_KEY")
+print(f"Google API Key: {api_key}")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found in environment variables. Please set it in the .env file.")
 
 models = [
     "gemini-2.5-flash",
@@ -16,6 +22,10 @@ models = [
 ]
 client = genai.Client(api_key=api_key)
 client.models.list()
+
+print("Available models:")
+for model in client.models.list():
+    print(f"- {model.name}")
 
 def get_date():
     return time.strftime("%d-%m-%Y")
@@ -40,7 +50,6 @@ def convert_to_doc(text, output_filename, type):
 
 text=" The mute muffled the high tones of the horn. The gold ring fits only a pierced ear. The old pan was covered with hard fudge. Watch the log float in the wide river. The node on the stock of wheat grew daily. The heap of fallen leaves was set on fire. Right fast, if you want to finish early. His shirt was clean, but one button was gone. The barrel of beer was a brew of malt and hops. Tin cans are absent from store shelves."
 # convert_to_doc(text, "Doc-Test", "transcription")
-
 
 # output_filename = f"Transcription - {get_date()}.docx"
 def doc_assistant(text):
